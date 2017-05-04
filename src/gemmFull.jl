@@ -7,16 +7,11 @@ const NC = 4096
 const MR = 4
 const NR = 4
 
-const _A = Array(Float64, MC*KC)
-const _B = Array(Float64, KC*NC)
-const _C = Array(Float64, MR*NR)
+const _A = Array{Float64}(MC*KC)
+const _B = Array{Float64}(KC*NC)
+const _C = Array{Float64}(MR*NR)
 
-const _AB = Array(Float64, MR*NR)
-const pAB = pointer(_AB)
-
-p_A = pointer(_A)
-p_B = pointer(_B)
-p_C = pointer(_C)
+const _AB = Array{Float64}(MR*NR)
 
 function pack_MRxk(k::Integer, A::Array{Float64}, Aoffset::Integer, incRowA::Integer,
     incColA::Integer, buffer::Array{Float64}, boffset::Integer)

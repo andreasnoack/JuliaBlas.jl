@@ -57,9 +57,9 @@ function gen_asm(args, xs)
     println(io, "\",\"", join(constr, ","), "\"(", join(llvmtypes, ", "), ")")
     println(io, "ret void")
     seekstart(io)
-    asm = readall(io)
+    asm = readstring(io)
     DEBUG_ASM && println(asm)
-    Expr(:call, TopNode(:llvmcall), asm, Void, Tuple{typs...}, args...)
+    Expr(:call, GlobalRef(Base, :llvmcall), asm, Void, Tuple{typs...}, args...)
 end
 
 macro asm(f)
