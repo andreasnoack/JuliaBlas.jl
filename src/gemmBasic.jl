@@ -115,8 +115,8 @@ const asms =
     "xorpd     %xmm6,    %xmm6   \n\t"*
     "xorpd     %xmm7,    %xmm7   \n\t"*
     "testl     %esi,     %esi    \n\t"*
-    "je        .DWRITEBACK       \n\t"*
-    ".DLOOP:                     \n\t"*
+    "je        .DWRITEBACK\${:uid}       \n\t"*
+    ".DLOOP\${:uid}:                     \n\t"*
     "addpd     %xmm3,  %xmm12    \n\t"*
     "movapd  16(%rbx), %xmm3     \n\t"*
     "addpd     %xmm6,  %xmm13    \n\t"*
@@ -146,12 +146,12 @@ const asms =
     "addq      \$\$32,   %rax    \n\t"*
     "addq      \$\$32,   %rbx    \n\t"*
     "decl      %esi              \n\t"*
-    "jne      .DLOOP             \n\t"*
+    "jne      .DLOOP\${:uid}             \n\t"*
     "addpd    %xmm3,   %xmm12    \n\t"*
     "addpd    %xmm6,   %xmm13    \n\t"*
     "addpd    %xmm5,   %xmm14    \n\t"*
     "addpd    %xmm7,   %xmm15    \n\t"*
-    ".DWRITEBACK:                \n\t"*
+    ".DWRITEBACK\${:uid}:                \n\t"*
     "movlpd   %xmm8,    (%rcx)   \n\t"*
     "movhpd   %xmm10,  8(%rcx)   \n\t"*
     "movlpd   %xmm9,  16(%rcx)   \n\t"*

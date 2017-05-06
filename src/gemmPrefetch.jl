@@ -122,9 +122,9 @@ const asms =
     "                            \n\t"*
     "                            \n\t"*
     "testq     %rsi,   %rsi    \n\t"*  # if kb==0 handle remaining kl
-    "je        .DCONSIDERLEFT  \n\t"*  # update iterations
+    "je        .DCONSIDERLEFT\${:uid}  \n\t"*  # update iterations
     "                            \n\t"*
-    ".DLOOP:                   \n\t"*  # for l = kb,..,1 do
+    ".DLOOP\${:uid}:                   \n\t"*  # for l = kb,..,1 do
     "                            \n\t"*
     "prefetcht0 (4*39+1)*8(%rax)\n\t"*
     "                            \n\t"*
@@ -286,14 +286,14 @@ const asms =
     "prefetcht2       64(%r10)  \n\t"*  # prefetch nextB[8]
     "                            \n\t"*
     "decq      %rsi             \n\t"*  # --l
-    "jne       .DLOOP          \n\t"*  # if l>= 1 go back
+    "jne       .DLOOP\${:uid}          \n\t"*  # if l>= 1 go back
     "                            \n\t"*
     "                            \n\t"*
-    ".DCONSIDERLEFT:           \n\t"*
+    ".DCONSIDERLEFT\${:uid}:           \n\t"*
     "testq     %rdi,   %rdi    \n\t"*  # if kl==0 writeback to AB
-    "je        .DPOSTACCUMULATE\n\t"*
+    "je        .DPOSTACCUMULATE\${:uid}\n\t"*
     "                            \n\t"*
-    ".DLOOPLEFT:               \n\t"*  # for l = kl,..,1 do
+    ".DLOOPLEFT\${:uid}:               \n\t"*  # for l = kl,..,1 do
     "                            \n\t"*
     "addpd     %xmm3,  %xmm12  \n\t"*  # ab_02_13 = _mm_add_pd(ab_02_13, tmp3)
     "movapd  16(%rbx), %xmm3   \n\t"*  # tmp3     = _mm_load_pd(B+2)
@@ -335,9 +335,9 @@ const asms =
     "addq      \$\$32,     %rbx    \n\t"*  # B += 4;
     "                            \n\t"*
     "decq      %rdi             \n\t"*  # --l
-    "jne       .DLOOPLEFT      \n\t"*  # if l>= 1 go back
+    "jne       .DLOOPLEFT\${:uid}      \n\t"*  # if l>= 1 go back
     "                            \n\t"*
-    ".DPOSTACCUMULATE:         \n\t"*  # Update remaining ab_*_* registers
+    ".DPOSTACCUMULATE\${:uid}:         \n\t"*  # Update remaining ab_*_* registers
     "                            \n\t"*
     "addpd    %xmm3,   %xmm12  \n\t"*  # ab_02_13 = _mm_add_pd(ab_02_13, tmp3)
     "addpd    %xmm6,   %xmm13  \n\t"*  # ab_22_33 = _mm_add_pd(ab_22_33, tmp6)

@@ -121,9 +121,9 @@ const asms =
 
 
     "testl     %esi,   %esi    \n\t"* # if kb==0 handle remaining kl
-    "je        .DCONSIDERLEFT  \n\t"* # update iterations
+    "je        .DCONSIDERLEFT\${:uid}  \n\t"* # update iterations
 
-    ".DLOOP:                   \n\t"* # for l = kb,..,1 do
+    ".DLOOP\${:uid}:                   \n\t"* # for l = kb,..,1 do
 
                                       # 1. update
     "addpd     %xmm3,  %xmm12  \n\t"* # ab_02_13 = _mm_add_pd(ab_02_13, tmp3)
@@ -286,14 +286,14 @@ const asms =
     "addq      \$\$32,     %rbx    \n\t"* # B += 4;
 
     "decl      %esi             \n\t"* # --l
-    "jne       .DLOOP          \n\t"* # if l>= 1 go back
+    "jne       .DLOOP\${:uid}          \n\t"* # if l>= 1 go back
 
 
-    ".DCONSIDERLEFT:           \n\t"*
+    ".DCONSIDERLEFT\${:uid}:           \n\t"*
     "testl     %edi,   %edi    \n\t"* # if kl==0 writeback to AB
-    "je        .DPOSTACCUMULATE    \n\t"*
+    "je        .DPOSTACCUMULATE\${:uid}    \n\t"*
 
-    ".DLOOPLEFT:               \n\t"* # for l = kl,..,1 do
+    ".DLOOPLEFT\${:uid}:               \n\t"* # for l = kl,..,1 do
 
     "addpd     %xmm3,  %xmm12  \n\t"* # ab_02_13 = _mm_add_pd(ab_02_13, tmp3)
     "movapd  16(%rbx), %xmm3   \n\t"* # tmp3     = _mm_load_pd(B+2)
@@ -335,9 +335,9 @@ const asms =
     "addq      \$\$32,     %rbx    \n\t"* # B += 4;
 
     "decl      %edi             \n\t"* # --l
-    "jne       .DLOOPLEFT      \n\t"* # if l>= 1 go back
+    "jne       .DLOOPLEFT\${:uid}      \n\t"* # if l>= 1 go back
 
-    ".DPOSTACCUMULATE:         \n\t"* # Update remaining ab_*_* registers
+    ".DPOSTACCUMULATE\${:uid}:         \n\t"* # Update remaining ab_*_* registers
 
     "addpd    %xmm3,   %xmm12  \n\t"* # ab_02_13 = _mm_add_pd(ab_02_13, tmp3)
     "addpd    %xmm6,   %xmm13  \n\t"* # ab_22_33 = _mm_add_pd(ab_22_33, tmp6)
@@ -345,7 +345,7 @@ const asms =
     "addpd    %xmm5,   %xmm14  \n\t"* # ab_03_12 = _mm_add_pd(ab_03_12, tmp5)
     "addpd    %xmm7,   %xmm15  \n\t"* # ab_23_32 = _mm_add_pd(ab_23_32, tmp7)
 
-    ".DWRITEBACK:              \n\t"* # Fill AB with computed values
+    ".DWRITEBACK\${:uid}:              \n\t"* # Fill AB with computed values
 
                                       # Fill first col of AB:
     "movlpd   %xmm8,    (%rcx) \n\t"* # _mm_storel_pd(&AB[0+0*4], ab_00_11)
