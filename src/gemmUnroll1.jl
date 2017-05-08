@@ -121,6 +121,13 @@ const asms =
 
 
     "testl     %esi,   %esi    \n\t"* # if kb==0 handle remaining kl
+    # Adding ${:uid} at the end of label can fix the error
+    # ```
+    # error: invalid symbol redefinition
+    # LLVM ERROR: Error parsing inline asm
+    # ```
+    # as referenced in
+    # http://llvm.org/docs/LangRef.html#inline-assembler-expressions
     "je        .DCONSIDERLEFT\${:uid}  \n\t"* # update iterations
 
     ".DLOOP\${:uid}:                   \n\t"* # for l = kb,..,1 do

@@ -115,6 +115,13 @@ const asms =
     "xorpd     %xmm6,    %xmm6   \n\t"*
     "xorpd     %xmm7,    %xmm7   \n\t"*
     "testl     %esi,     %esi    \n\t"*
+    # Adding ${:uid} at the end of label can fix the error
+    # ```
+    # error: invalid symbol redefinition
+    # LLVM ERROR: Error parsing inline asm
+    # ```
+    # as referenced in
+    # http://llvm.org/docs/LangRef.html#inline-assembler-expressions
     "je        .DWRITEBACK\${:uid}       \n\t"*
     ".DLOOP\${:uid}:                     \n\t"*
     "addpd     %xmm3,  %xmm12    \n\t"*
