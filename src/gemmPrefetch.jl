@@ -7,16 +7,11 @@ const NC = 4096
 const MR = 4
 const NR = 4
 
-const _A = Array(Float64, MC*KC)
-const _B = Array(Float64, KC*NC)
-const _C = Array(Float64, MR*NR)
+const _A = Array{Float64}(MC*KC)
+const _B = Array{Float64}(KC*NC)
+const _C = Array{Float64}(MR*NR)
 
-const _AB = Array(Float64, MR*NR)
-const pAB = pointer(_AB)
-
-p_A = pointer(_A)
-p_B = pointer(_B)
-p_C = pointer(_C)
+const _AB = Array{Float64}(MR*NR)
 
 function pack_MRxk(k::Integer, A::Array{Float64}, Aoffset::Integer, incRowA::Integer,
     incColA::Integer, buffer::Array{Float64}, boffset::Integer)
@@ -127,9 +122,16 @@ const asms =
     "                            \n\t"*
     "                            \n\t"*
     "testq     %rsi,   %rsi    \n\t"*  # if kb==0 handle remaining kl
-    "je        .DCONSIDERLEFT  \n\t"*  # update iterations
+    # Adding ${:uid} at the end of label can fix the error
+    # ```
+    # error: invalid symbol redefinition
+    # LLVM ERROR: Error parsing inline asm
+    # ```
+    # as referenced in
+    # http://llvm.org/docs/LangRef.html#inline-assembler-expressions
+    "je        .DCONSIDERLEFT\${:uid}  \n\t"*  # update iterations
     "                            \n\t"*
-    ".DLOOP:                   \n\t"*  # for l = kb,..,1 do
+    ".DLOOP\${:uid}:                   \n\t"*  # for l = kb,..,1 do
     "                            \n\t"*
     "prefetcht0 (4*39+1)*8(%rax)\n\t"*
     "                            \n\t"*
@@ -291,14 +293,14 @@ const asms =
     "prefetcht2       64(%r10)  \n\t"*  # prefetch nextB[8]
     "                            \n\t"*
     "decq      %rsi             \n\t"*  # --l
-    "jne       .DLOOP          \n\t"*  # if l>= 1 go back
+    "jne       .DLOOP\${:uid}          \n\t"*  # if l>= 1 go back
     "                            \n\t"*
     "                            \n\t"*
-    ".DCONSIDERLEFT:           \n\t"*
+    ".DCONSIDERLEFT\${:uid}:           \n\t"*
     "testq     %rdi,   %rdi    \n\t"*  # if kl==0 writeback to AB
-    "je        .DPOSTACCUMULATE\n\t"*
+    "je        .DPOSTACCUMULATE\${:uid}\n\t"*
     "                            \n\t"*
-    ".DLOOPLEFT:               \n\t"*  # for l = kl,..,1 do
+    ".DLOOPLEFT\${:uid}:               \n\t"*  # for l = kl,..,1 do
     "                            \n\t"*
     "addpd     %xmm3,  %xmm12  \n\t"*  # ab_02_13 = _mm_add_pd(ab_02_13, tmp3)
     "movapd  16(%rbx), %xmm3   \n\t"*  # tmp3     = _mm_load_pd(B+2)
@@ -340,9 +342,9 @@ const asms =
     "addq      \$\$32,     %rbx    \n\t"*  # B += 4;
     "                            \n\t"*
     "decq      %rdi             \n\t"*  # --l
-    "jne       .DLOOPLEFT      \n\t"*  # if l>= 1 go back
+    "jne       .DLOOPLEFT\${:uid}      \n\t"*  # if l>= 1 go back
     "                            \n\t"*
-    ".DPOSTACCUMULATE:         \n\t"*  # Update remaining ab_*_* registers
+    ".DPOSTACCUMULATE\${:uid}:         \n\t"*  # Update remaining ab_*_* registers
     "                            \n\t"*
     "addpd    %xmm3,   %xmm12  \n\t"*  # ab_02_13 = _mm_add_pd(ab_02_13, tmp3)
     "addpd    %xmm6,   %xmm13  \n\t"*  # ab_22_33 = _mm_add_pd(ab_22_33, tmp6)

@@ -7,16 +7,11 @@ const NC = 4096
 const MR = 4
 const NR = 4
 
-const _A = Array(Float64, MC*KC)
-const _B = Array(Float64, KC*NC)
-const _C = Array(Float64, MR*NR)
+const _A = Array{Float64}(MC*KC)
+const _B = Array{Float64}(KC*NC)
+const _C = Array{Float64}(MR*NR)
 
-const _AB = Array(Float64, MR*NR)
-const pAB = pointer(_AB)
-
-p_A = pointer(_A)
-p_B = pointer(_B)
-p_C = pointer(_C)
+const _AB = Array{Float64}(MR*NR)
 
 function pack_MRxk(k::Integer, A::Array{Float64}, Aoffset::Integer, incRowA::Integer,
     incColA::Integer, buffer::Array{Float64}, boffset::Integer)
@@ -120,8 +115,15 @@ const asms =
     "xorpd     %xmm6,    %xmm6   \n\t"*
     "xorpd     %xmm7,    %xmm7   \n\t"*
     "testl     %esi,     %esi    \n\t"*
-    "je        .DWRITEBACK       \n\t"*
-    ".DLOOP:                     \n\t"*
+    # Adding ${:uid} at the end of label can fix the error
+    # ```
+    # error: invalid symbol redefinition
+    # LLVM ERROR: Error parsing inline asm
+    # ```
+    # as referenced in
+    # http://llvm.org/docs/LangRef.html#inline-assembler-expressions
+    "je        .DWRITEBACK\${:uid}       \n\t"*
+    ".DLOOP\${:uid}:                     \n\t"*
     "addpd     %xmm3,  %xmm12    \n\t"*
     "movapd  16(%rbx), %xmm3     \n\t"*
     "addpd     %xmm6,  %xmm13    \n\t"*
@@ -151,12 +153,12 @@ const asms =
     "addq      \$\$32,   %rax    \n\t"*
     "addq      \$\$32,   %rbx    \n\t"*
     "decl      %esi              \n\t"*
-    "jne      .DLOOP             \n\t"*
+    "jne      .DLOOP\${:uid}             \n\t"*
     "addpd    %xmm3,   %xmm12    \n\t"*
     "addpd    %xmm6,   %xmm13    \n\t"*
     "addpd    %xmm5,   %xmm14    \n\t"*
     "addpd    %xmm7,   %xmm15    \n\t"*
-    ".DWRITEBACK:                \n\t"*
+    ".DWRITEBACK\${:uid}:                \n\t"*
     "movlpd   %xmm8,    (%rcx)   \n\t"*
     "movhpd   %xmm10,  8(%rcx)   \n\t"*
     "movlpd   %xmm9,  16(%rcx)   \n\t"*
